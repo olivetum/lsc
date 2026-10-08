@@ -5,7 +5,7 @@ using namespace std;
 
 namespace {
 #define RESET   "\033[0m"
-#define GREEN   "\033[32m"      /* Green */
+#define RED     "\033[31m"      /* Red */
 #define BLUE    "\033[34m"      /* Blue */
 
         std::string toLowerCase(std::string name, bool erase = false) {
@@ -20,12 +20,26 @@ namespace {
                 return name;
         }
 
-        void printEntries(const vector<filesystem::directory_entry>& entries) {
+        void printEntries(const vector<filesystem::directory_entry> &entries) {
                 for (auto const &dir_entry: entries) {
                         if (dir_entry.is_directory()) {
                                 cout << BLUE << dir_entry.path().string().substr(2) << RESET << "/" << endl;
                         } else {
-                                cout << dir_entry.path().string().substr(2) << endl;
+                                if (dir_entry.is_regular_file()) {
+                                        std::filesystem::perms p = dir_entry.status().permissions();
+
+                                        // Combine the execution bits
+                                        auto exe_bits =
+                                                        std::filesystem::perms::owner_exec |
+                                                        std::filesystem::perms::group_exec |
+                                                        std::filesystem::perms::others_exec;
+
+                                        if ((p & exe_bits) != std::filesystem::perms::none) {
+                                                cout << RED << dir_entry.path().string().substr(2) << RESET << endl;
+                                        } else {
+                                                cout << dir_entry.path().string().substr(2) << endl;
+                                        }
+                                }
                         }
                 }
         }
@@ -60,9 +74,9 @@ int main(const int argc, char *argv[]) {
 
         entries.erase(
                 std::ranges::remove_if(entries,
-                                  [](const filesystem::directory_entry &entry) {
-                                          return entry.path().filename().string().starts_with('.');
-                                  }).begin(),
+                                       [](const filesystem::directory_entry &entry) {
+                                               return entry.path().filename().string().starts_with('.');
+                                       }).begin(),
                 entries.end()
         );
 
