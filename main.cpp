@@ -32,14 +32,14 @@ namespace {
 }
 
 int main(const int argc, char *argv[]) {
-        const char *path = (argc > 1) ? argv[1] : ".";
+        const char *path = ((argc > 1) && (argv[1][0] != '-')) ? argv[1] : "./";
         bool showAll = false;
 
         // FLAGS
         vector<char> flags;
-        if (argc > 2) {
-                for (int i = 2; i < argc; ++i) {
-                        if (argv[i][1] == 'a') {
+        if (argc > 1) {
+                for (int i = 1; i < argc; ++i) {
+                        if (argv[i][0] == '-' && argv[i][1] == 'a') {
                                 showAll = true;
                         }
                 }
